@@ -68,7 +68,14 @@ async function getReconstructedFileUrl(
       chunks.push(await chunkRes.blob());
     }
 
-    const blob = new Blob(chunks);
+    const mimeType = fileName.endsWith('.wasm.gz') 
+      ? 'application/wasm' 
+      : fileName.endsWith('.data.gz') 
+        ? 'application/octet-stream' 
+        : '';
+
+    const blob = new Blob(chunks, { type: mimeType });
+    // const blob = new Blob(chunks);
     const objectUrl = URL.createObjectURL(blob);
     console.log(
       `[LibreOffice] Reconstructed ${fileName} (${blob.size} bytes) -> ${objectUrl}`

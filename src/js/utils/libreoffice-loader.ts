@@ -8,6 +8,7 @@
 import { WorkerBrowserConverter } from '@matbee/libreoffice-converter/browser';
 
 const LIBREOFFICE_LOCAL_PATH = import.meta.env.BASE_URL + 'libreoffice-wasm/';
+const DIST_URL = import.meta.env.BASE_URL; // e.g. / or /my-app/
 
 export interface LoadProgress {
     phase: 'loading' | 'initializing' | 'converting' | 'complete' | 'ready';
@@ -19,6 +20,68 @@ export type ProgressCallback = (progress: LoadProgress) => void;
 
 // Singleton for converter instance
 let converterInstance: LibreOfficeConverter | null = null;
+
+// Helper to check and reconstruct split files
+async function getReconstructedFileUrl(
+  basePath: string,
+  fileName: string
+): Promise<string> {
+  const originalUrl = `${basePath}${fileName}`;
+  const manifestUrl = `${DIST_URL}chunks-manifest.json`;
+
+  try {
+    const manifestRes = await fetch(manifestUrl);
+    if (!manifestRes.ok) return originalUrl;
+
+    const manifest = await manifestRes.json();
+    // The manifest keys are relative paths like "libreoffice-wasm/soffice.wasm.gz"
+    // We need to match the requested file.
+    // Assuming basePath ends with /, and fileName is just the name.
+    // Let's try to construct the relative path that might be in the manifest.
+    // If basePath is absolute URL or starts with /, we need to be careful.
+    // The manifest keys are relative to the dist root.
+
+    // Extract the path relative to the root (remove leading slash if present)
+    let relativePath = originalUrl;
+    if (relativePath.startsWith(DIST_URL)) {
+      relativePath = relativePath.substring(DIST_URL.length);
+    }
+    if (relativePath.startsWith('/')) {
+      relativePath = relativePath.substring(1);
+    }
+
+    const totalChunks = manifest[relativePath];
+
+    if (!totalChunks) {
+      return originalUrl;
+    }
+
+    console.log(
+      `[LibreOffice] Detected split file for ${fileName}, merging ${totalChunks} chunks...`
+    );
+
+    const chunks: Blob[] = [];
+    for (let i = 0; i < totalChunks; i++) {
+      const chunkUrl = `${originalUrl}.part${i + 1}`;
+      const chunkRes = await fetch(chunkUrl);
+      if (!chunkRes.ok) throw new Error(`Failed to fetch chunk ${chunkUrl}`);
+      chunks.push(await chunkRes.blob());
+    }
+
+    const blob = new Blob(chunks);
+    const objectUrl = URL.createObjectURL(blob);
+    console.log(
+      `[LibreOffice] Reconstructed ${fileName} (${blob.size} bytes) -> ${objectUrl}`
+    );
+    return objectUrl;
+  } catch (e) {
+    console.warn(
+      `[LibreOffice] Failed to check/load split file for ${fileName}, falling back to original URL`,
+      e
+    );
+    return originalUrl;
+  }
+}
 
 export class LibreOfficeConverter {
     private converter: WorkerBrowserConverter | null = null;
@@ -47,10 +110,21 @@ export class LibreOfficeConverter {
         try {
             progressCallback?.({ phase: 'loading', percent: 0, message: 'Loading conversion engine...' });
 
+            const sofficeWasmUrl = await getReconstructedFileUrl(
+                this.basePath,
+                'soffice.wasm.gz'
+            );
+            const sofficeDataUrl = await getReconstructedFileUrl(
+                this.basePath,
+                'soffice.data.gz'
+            );
+            
             this.converter = new WorkerBrowserConverter({
                 sofficeJs: `${this.basePath}soffice.js`,
-                sofficeWasm: `${this.basePath}soffice.wasm.gz`,
-                sofficeData: `${this.basePath}soffice.data.gz`,
+                // sofficeWasm: `${this.basePath}soffice.wasm.gz`,
+                // sofficeData: `${this.basePath}soffice.data.gz`,
+                sofficeWasm: sofficeWasmUrl,
+                sofficeData: sofficeDataUrl,
                 sofficeWorkerJs: `${this.basePath}soffice.worker.js`,
                 browserWorkerJs: `${this.basePath}browser.worker.global.js`,
                 verbose: false,

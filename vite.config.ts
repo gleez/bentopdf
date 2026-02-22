@@ -14,19 +14,19 @@ import type { OutputBundle } from 'rollup';
 
 const SUPPORTED_LANGUAGES = [
   'en',
-  'be',
-  'de',
+  // 'be',
+  // 'de',
   'es',
-  'zh',
-  'zh-TW',
-  'vi',
-  'it',
-  'id',
-  'tr',
-  'fr',
-  'pt',
-  'nl',
-  'da',
+  // 'zh',
+  // 'zh-TW',
+  // 'vi',
+  // 'it',
+  // 'id',
+  // 'tr',
+  // 'fr',
+  // 'pt',
+  // 'nl',
+  // 'da',
 ] as const;
 const LANG_REGEX = new RegExp(
   `^/(${SUPPORTED_LANGUAGES.join('|')})(?:/(.*))?$`
@@ -338,6 +338,7 @@ export default defineConfig(() => {
     define: {
       __SIMPLE_MODE__: JSON.stringify(process.env.SIMPLE_MODE === 'true'),
       __BRAND_NAME__: JSON.stringify(process.env.VITE_BRAND_NAME || ''),
+      __EDGE_URL__: JSON.stringify(process.env.EDGE_URL || ''),
     },
     resolve: {
       alias: {

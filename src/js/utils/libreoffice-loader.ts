@@ -29,7 +29,7 @@ export class LibreOfficeConverter {
 
     constructor(basePath?: string) {
         console.log(basePath, LIBREOFFICE_REMOTE_PATH)
-        this.basePath = basePath || LIBREOFFICE_REMOTE_PATH || LIBREOFFICE_LOCAL_PATH;
+        this.basePath = basePath || LIBREOFFICE_LOCAL_PATH;
     }
 
     async initialize(onProgress?: ProgressCallback): Promise<void> {
@@ -52,8 +52,8 @@ export class LibreOfficeConverter {
             
             this.converter = new WorkerBrowserConverter({
                 sofficeJs: `${this.basePath}soffice.js`,
-                sofficeWasm: `${this.basePath}soffice.wasm.gz`,
-                sofficeData: `${this.basePath}soffice.data.gz`,
+                sofficeWasm: `${LIBREOFFICE_REMOTE_PATH}soffice.wasm.gz`,
+                sofficeData: `${LIBREOFFICE_REMOTE_PATH}soffice.data.gz`,
                 sofficeWorkerJs: `${this.basePath}soffice.worker.js`,
                 browserWorkerJs: `${this.basePath}browser.worker.global.js`,
                 verbose: false,

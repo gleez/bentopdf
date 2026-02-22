@@ -28,7 +28,6 @@ export class LibreOfficeConverter {
     private basePath: string;
 
     constructor(basePath?: string) {
-        console.log(basePath, LIBREOFFICE_REMOTE_PATH)
         this.basePath = basePath || LIBREOFFICE_LOCAL_PATH;
     }
 

@@ -8,7 +8,7 @@
 import { WorkerBrowserConverter } from '@matbee/libreoffice-converter/browser';
 
 const LIBREOFFICE_LOCAL_PATH = import.meta.env.BASE_URL + 'libreoffice-wasm/';
-const LIBREOFFICE_REMOTE_PATH = import.meta.env.EDGE_URL;
+const LIBREOFFICE_REMOTE_PATH = import.meta.env.VITE_EDGE_URL;
 
 export interface LoadProgress {
     phase: 'loading' | 'initializing' | 'converting' | 'complete' | 'ready';

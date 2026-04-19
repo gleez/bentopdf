@@ -9,6 +9,7 @@ import { WorkerBrowserConverter } from '@matbee/libreoffice-converter/browser';
 import type { InputFormat } from '@matbee/libreoffice-converter/browser';
 
 const LIBREOFFICE_LOCAL_PATH = import.meta.env.BASE_URL + 'libreoffice-wasm/';
+const LIBREOFFICE_REMOTE_PATH = import.meta.env.VITE_EDGE_URL;
 
 export interface LoadProgress {
   phase: 'loading' | 'initializing' | 'converting' | 'complete' | 'ready';
@@ -53,8 +54,8 @@ export class LibreOfficeConverter {
 
       this.converter = new WorkerBrowserConverter({
         sofficeJs: `${this.basePath}soffice.js`,
-        sofficeWasm: `${this.basePath}soffice.wasm.gz`,
-        sofficeData: `${this.basePath}soffice.data.gz`,
+        sofficeWasm: `${LIBREOFFICE_REMOTE_PATH}soffice.wasm.gz`,
+        sofficeData: `${LIBREOFFICE_REMOTE_PATH}soffice.data.gz`,
         sofficeWorkerJs: `${this.basePath}soffice.worker.js`,
         browserWorkerJs: `${this.basePath}browser.worker.global.js`,
         verbose: false,
